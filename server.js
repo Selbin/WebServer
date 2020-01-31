@@ -1,16 +1,14 @@
 const net = require('net')
 const { reqParser } = require('./reqParser')
 const server = net.createServer()
-
+const { createResponse } = require('./response')
 function createServer (port) {
   server.on('connection', socket => {
     const remoteAddr = socket.remoteAddress + ':' + socket.remotePort
     console.log('new client joined', remoteAddr)
 
-    socket.on('data', data => {
-      console.log(data.toString())
-      console.log(reqParser(data))
-      socket.write(data)
+    socket.on('data', async data => {
+      socket.write(await createResponse(reqParser(data)))
     })
 
     socket.once('close', () => {

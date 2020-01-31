@@ -1,25 +1,36 @@
 const net = require('net')
-
+const { reqParser } = require('./reqParser')
 const server = net.createServer()
 
-server.on('connection', (socket) => {
-  const remoteAddr = socket.remoteAddress + ':' + socket.remotePort
-  console.log('new client joined', remoteAddr)
+function createServer (port) {
+  server.on('connection', socket => {
+    const remoteAddr = socket.remoteAddress + ':' + socket.remotePort
+    console.log('new client joined', remoteAddr)
 
-  socket.on('data', (data) => {
-    console.log('data from ' + remoteAddr + ': ' + data)
-    socket.write('hello ' + data)
+    socket.on('data', data => {
+      console.log(data.toString())
+      console.log(reqParser(data))
+      socket.write(data)
+    })
+
+    socket.once('close', () => {
+      console.log('connection closed ' + remoteAddr)
+    })
+
+    socket.on('error', err => {
+      console.log('error ' + remoteAddr + ': ' + err.message)
+    })
   })
 
-  socket.once('close', () => {
-    console.log('connection closed ' + remoteAddr)
+  server.listen(port, () => {
+    console.log('listening on port: ', server.address())
   })
+}
 
-  socket.on('error', (err) => {
-    console.log('error ' + remoteAddr + ': ' + err.message)
-  })
-})
+const app = {
+  listen: (port) => {
+    createServer(port)
+  }
+}
 
-server.listen(6000, () => {
-  console.log('listening on port: ', server.address())
-})
+module.exports = { app }

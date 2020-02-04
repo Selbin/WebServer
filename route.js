@@ -1,4 +1,4 @@
-const { reqParser } = require('./reqParser')
+const { errorRes } = require('./response')
 // const routeParser = function (req) {
 //   reqObj = {}
 //   const reqString = req.toString().split('\r\n')
@@ -15,19 +15,18 @@ function uParamsParse (uri) {
   return routeUrl
 }
 
-const routeParser = function (req, routes) {
-  const reqObj = reqParser(req)
+const routeParser = async function (reqObj, routes) {
   reqObj.params = {}
   const routeUrl = uParamsParse(reqObj.uri)
   const keys = Object.keys(routes)
-  const sortUrl = keys.filter(key => /^(\/[^:]*)*$/.test(key))
-  keys.forEach(key => {
-    if (!(sortUrl.includes(key))) sortUrl.push(key)
-  })
-  for (const route of sortUrl) {
+  // const sortUrl = keys.filter(key => /^(\/[^:]*)*$/.test(key))
+  // keys.forEach(key => {
+  //   if (!sortUrl.includes(key)) sortUrl.push(key)
+  // })
+  for (const route of keys) {
     let count = 0
     const test = uParamsParse(route)
-    for (let i = 0; i < test.length; i++) {
+    for (let i = 0; i < routeUrl.length; i++) {
       if (test[i].startsWith(':')) {
         reqObj.params[test[i].slice(1)] = routeUrl[i]
         count++
@@ -37,7 +36,33 @@ const routeParser = function (req, routes) {
       }
     }
     if (count === test.length) {
-      return routes[route][reqObj.method](reqObj)
+      try {
+        const response = {}
+        response.status = function (res) {
+          let responseString = `HTTP/1.1 ${res}\r\n`
+          responseString +=
+            'Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\r\n'
+          responseString += `date: ${new Date()}/r/n`
+          response.result = responseString
+          return response
+        }
+        response.send = function (res) {
+          const body = Buffer.from(res)
+          let responseString = response.result
+          responseString += 'Content-Type: *\r\n'
+          responseString += `Content-Length: ${body.length}\r\n\r\n`
+          responseString = Buffer.from(responseString)
+          responseString = Buffer.concat([responseString, body])
+          response.result = responseString
+          return response
+        }
+        routes[route][reqObj.method](reqObj, response)
+        return response.result
+      } catch (error) {
+        console.log(error)
+        const res = await errorRes()
+        return res
+      }
     }
   }
 }

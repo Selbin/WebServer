@@ -1,12 +1,18 @@
 const reqParser = function (req) {
   const reqObj = {}
   const reqString = req.toString().split('\r\n')
-  const firstString = reqString[0].split(' ')
-  reqObj.method = firstString[0]
-  if (!firstString[1].startsWith('/')) throw new Error('invalid request')
-  reqObj.uri = firstString[1]
-  reqObj.httpVersion = firstString[2]
-
+  let [method, uri, httpVersion] = reqString[0].split(' ')
+  const queryParams = uri.split('?')[1]
+  uri = uri.split('?')[0]
+  if (queryParams) {
+    reqObj.query = {}
+    const queryParamsList = queryParams.split('&')
+    for (const item of queryParamsList) {
+      const [key, value] = item.split('=')
+      reqObj.query[key] = value
+    }
+  }
+  Object.assign(reqObj, { method, uri, httpVersion })
   reqObj.headers = {}
   for (let i = 1; i < reqString.length - 2; i++) {
     const header = reqString[i].split(': ')

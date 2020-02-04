@@ -2,7 +2,7 @@ const net = require('net')
 const { reqParser } = require('./reqParser')
 const { routeParser } = require('./route')
 const server = net.createServer()
-const { createResponse } = require('./servestatic')
+const { serveStatic } = require('./servestatic')
 const routes = {
   '/list/todo/a/v': {
     GET: (req, res) => {
@@ -35,9 +35,9 @@ function createServer (port) {
     console.log('new client joined', remoteAddr)
 
     socket.on('data', async data => {
-      let res = await createResponse(reqParser(data))
-      if (res === null) res = routeParser(data, routes)
-      console.log(res)
+      const req = reqParser(data)
+      let res = await serveStatic(req)
+      if (res === null) res = await routeParser(req, routes)
       socket.end(Buffer.from(res))
     })
 
@@ -58,6 +58,22 @@ function createServer (port) {
 const app = {
   listen: port => {
     createServer(port)
+  },
+  get: (path, fun) => {
+    routes[path] = { GET: {} }
+    routes[path].GET = fun
+  },
+  post: (path, fun) => {
+    routes[path] = { POST: {} }
+    routes[path].POST = fun
+  },
+  put: (path, fun) => {
+    routes[path] = { PUT: {} }
+    routes[path].PUT = fun
+  },
+  delete: (path, fun) => {
+    routes[path] = { DELETE: {} }
+    routes[path].DELETE = fun
   }
 }
 

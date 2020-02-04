@@ -17,14 +17,14 @@ function getContentType (uri) {
   if (content === undefined) throw new Error('invalid content type')
   return `Content-Type: ${content}`
 }
-async function createResponse (reqObj) {
+async function serveStatic (reqObj) {
   if (reqObj.method === 'GET') {
     try {
       let res =
         'HTTP/1.1 200 ok\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\r\n'
       if (reqObj.uri === '/') reqObj.uri = '/index.html'
       const body = Buffer.from(await fs.readFile('.' + reqObj.uri))
-      res += `date: ${new Date()}`
+      res += `date: ${new Date()}/r/n`
       res += `Content-Length: ${body.length}\r\n`
       res += getContentType(reqObj.uri) + '\r\n\r\n'
       res = Buffer.from(res)
@@ -32,14 +32,8 @@ async function createResponse (reqObj) {
       return res
     } catch (error) {
       return null
-      // let res = 'HTTP/1.0 400 Bad Request\r\nContent-Type: text/html\r\n'
-      // const body = Buffer.from(await fs.readFile('./error.html'))
-      // res += `Content-Length: ${body.length}\r\n\r\n`
-      // res = Buffer.from(res)
-      // res = Buffer.concat([res, body])
-      // return res
     }
   }
   return null
 }
-module.exports = { createResponse }
+module.exports = { serveStatic }

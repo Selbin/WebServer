@@ -1,6 +1,7 @@
 const reqParser = function (req) {
   const reqObj = {}
   const reqString = req.toString().split('\r\n')
+  reqObj.body = reqString[reqString.length - 1]
   let [method, uri, httpVersion] = reqString[0].split(' ')
   const queryParams = uri.split('?')[1]
   uri = uri.split('?')[0]

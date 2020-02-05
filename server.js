@@ -4,23 +4,7 @@ const { routeParser } = require('./route')
 const server = net.createServer()
 const { serveStatic } = require('./servestatic')
 const routes = {
-  '/list/todo/a/v': {
-    GET: (req, res) => {
-      return req.params.listid1
-    },
-    POST: (req, res) => {
-      return req.params.listid1
-    }
-  },
   '/list/todo/:listid1/:listid2': {
-    GET: (req, res) => {
-      return req.params.listid1
-    },
-    POST: (req, res) => {
-      return req.params.listid2
-    }
-  },
-  '/list/ggg/gd': {
     GET: (req, res) => {
       return req.params.listid1
     },
@@ -29,6 +13,8 @@ const routes = {
     }
   }
 }
+
+const middlewares = []
 function createServer (port) {
   server.on('connection', socket => {
     const remoteAddr = socket.remoteAddress + ':' + socket.remotePort
@@ -37,7 +23,7 @@ function createServer (port) {
     socket.on('data', async data => {
       const req = reqParser(data)
       let res = await serveStatic(req)
-      if (res === null) res = await routeParser(req, routes)
+      if (res === null) res = await routeParser(req, routes, middlewares)
       socket.end(Buffer.from(res))
     })
 
@@ -58,6 +44,9 @@ function createServer (port) {
 const app = {
   listen: port => {
     createServer(port)
+  },
+  use: (middleware) => {
+    middlewares.push(middleware)
   },
   get: (path, fun) => {
     routes[path] = { GET: {} }

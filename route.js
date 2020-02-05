@@ -15,7 +15,7 @@ function uParamsParse (uri) {
   return routeUrl
 }
 
-const routeParser = async function (reqObj, routes) {
+const routeParser = async function (reqObj, routes, middlewares) {
   reqObj.params = {}
   const routeUrl = uParamsParse(reqObj.uri)
   const keys = Object.keys(routes)
@@ -47,7 +47,7 @@ const routeParser = async function (reqObj, routes) {
           return response
         }
         response.send = function (res) {
-          const body = Buffer.from(res)
+          const body = Buffer.from(JSON.stringify(res))
           let responseString = response.result
           responseString += 'Content-Type: *\r\n'
           responseString += `Content-Length: ${body.length}\r\n\r\n`
@@ -56,10 +56,13 @@ const routeParser = async function (reqObj, routes) {
           response.result = responseString
           return response
         }
-        routes[route][reqObj.method](reqObj, response)
+        const execute = [...middlewares, routes[route][reqObj.method]]
+        for (const fun of execute) {
+          fun(reqObj, response)
+        }
         return response.result
       } catch (error) {
-        console.log(error)
+        // console.log(error)
         const res = await errorRes()
         return res
       }

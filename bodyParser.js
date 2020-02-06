@@ -1,5 +1,6 @@
 function bodyParser (req, res) {
   if (req.headers['Content-Type'] === 'application/json') {
+    if (!req.body) return 0
     req.body = JSON.parse(req.body)
   }
   if (req.headers['Content-Type'] === 'application/x-www-form-urlencoded') {

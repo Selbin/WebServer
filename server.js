@@ -3,16 +3,7 @@ const { reqParser } = require('./reqParser')
 const { routeParser } = require('./route')
 const server = net.createServer()
 const { serveStatic } = require('./servestatic')
-const routes = {
-  '/list/todo/:listid1/:listid2': {
-    GET: (req, res) => {
-      return req.params.listid1
-    },
-    POST: (req, res) => {
-      return req.params.listid2
-    }
-  }
-}
+const routes = {}
 
 const middlewares = []
 function createServer (port) {
@@ -45,24 +36,24 @@ const app = {
   listen: port => {
     createServer(port)
   },
-  use: (middleware) => {
+  use: middleware => {
     middlewares.push(middleware)
   },
   get: (path, fun) => {
-    routes[path] = { GET: {} }
-    routes[path].GET = fun
+    if (routes[path] === undefined) routes[path] = {}
+    routes[path] = Object.assign(routes[path], { GET: fun })
   },
   post: (path, fun) => {
-    routes[path] = { POST: {} }
-    routes[path].POST = fun
+    if (routes[path] === undefined) routes[path] = {}
+    routes[path] = Object.assign(routes[path], { POST: fun })
   },
   put: (path, fun) => {
-    routes[path] = { PUT: {} }
-    routes[path].PUT = fun
+    if (routes[path] === undefined) routes[path] = {}
+    routes[path] = Object.assign(routes[path], { PUT: fun })
   },
   delete: (path, fun) => {
-    routes[path] = { DELETE: {} }
-    routes[path].DELETE = fun
+    if (routes[path] === undefined) routes[path] = {}
+    routes[path] = Object.assign(routes[path], { DELETE: fun })
   }
 }
 

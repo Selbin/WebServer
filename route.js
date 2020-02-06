@@ -12,6 +12,7 @@ const { errorRes } = require('./response')
 // }
 function uParamsParse (uri) {
   const routeUrl = uri.split('/').slice(1)
+
   return routeUrl
 }
 
@@ -23,11 +24,12 @@ const routeParser = async function (reqObj, routes, middlewares) {
   // keys.forEach(key => {
   //   if (!sortUrl.includes(key)) sortUrl.push(key)
   // })
+
   for (const route of keys) {
     let count = 0
     const test = uParamsParse(route)
     for (let i = 0; i < routeUrl.length; i++) {
-      if (test[i].startsWith(':')) {
+      if (test[i] !== undefined && test[i].startsWith(':')) {
         reqObj.params[test[i].slice(1)] = routeUrl[i]
         count++
       } else {
@@ -35,7 +37,7 @@ const routeParser = async function (reqObj, routes, middlewares) {
         count++
       }
     }
-    if (count === test.length) {
+    if (count === routeUrl.length) {
       try {
         const response = {}
         response.status = function (res) {
@@ -57,12 +59,14 @@ const routeParser = async function (reqObj, routes, middlewares) {
           return response
         }
         const execute = [...middlewares, routes[route][reqObj.method]]
-        for (const fun of execute) {
-          fun(reqObj, response)
+        if (routes[route][reqObj.method] !== undefined) {
+          for (const fun of execute) {
+            await fun(reqObj, response)
+          }
+          return response.result
         }
-        return response.result
       } catch (error) {
-        // console.log(error)
+        console.log(error)
         const res = await errorRes()
         return res
       }

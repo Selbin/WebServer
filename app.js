@@ -8,7 +8,6 @@ app.post('/list/hi/:id1/:id2', (req, res) => {
   return res
 })
 app.get('/list/hi', (req, res) => {
-  console.log('hi')
   console.log(req.query.id1)
   console.log(req.query.id2)
 

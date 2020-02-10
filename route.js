@@ -72,6 +72,8 @@ const routeParser = async function (reqObj, routes, middlewares) {
       }
     }
   }
+  const res = await errorRes()
+  return res
 }
 
 module.exports = { routeParser }

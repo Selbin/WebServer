@@ -1,5 +1,4 @@
 const { errorRes, setStatus, setResponse } = require('./response')
-const serveStatic = require('./servestatic')
 
 function splitAtSlash (uri) {
   const routeUrl = uri.split('/').slice(1)
@@ -23,18 +22,17 @@ function matchRoute (route, routeUrl, reqObj) {
 }
 
 const routeParser = async function (reqObj, routes, middlewares) {
-  const staticFile = await serveStatic(reqObj)
-  if (staticFile) return staticFile
+  const response = { status: setStatus, send: setResponse }
+  for (const handler of [...middlewares]) {
+    if (await handler(reqObj, response)) return response.result
+  }
   const routeUrl = splitAtSlash(reqObj.uri)
   const keys = Object.keys(routes)
   for (const route of keys) {
     if (matchRoute(route, routeUrl, reqObj)) {
       try {
-        const response = { status: setStatus, send: setResponse }
         if (routes[route][reqObj.method] !== undefined) {
-          for (const handler of [...middlewares, routes[route][reqObj.method]]) {
-            await handler(reqObj, response)
-          }
+          await routes[route][reqObj.method](reqObj, response)
           return response.result
         }
       } catch (error) {

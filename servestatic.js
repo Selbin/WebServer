@@ -36,4 +36,4 @@ async function serveStatic (reqObj) {
   }
   return null
 }
-module.exports = { serveStatic }
+module.exports = serveStatic

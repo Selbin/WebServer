@@ -2,10 +2,11 @@ const net = require('net')
 const { reqParser } = require('./reqParser')
 const { routeParser } = require('./route')
 const server = net.createServer()
-const { serveStatic } = require('./servestatic')
+const bodyParser = require('./bodyParser')
 const routes = {}
 
-const middlewares = []
+const middlewares = [bodyParser]
+
 function createServer (port) {
   server.on('connection', socket => {
     const remoteAddr = socket.remoteAddress + ':' + socket.remotePort
@@ -13,29 +14,26 @@ function createServer (port) {
     let reqStr = ''
     let bodyFlag = false
     let body = ''
+    let reqObj
     socket.on('data', async data => {
       if (!bodyFlag) {
         reqStr += data.toString()
+        data = ''
         if (reqStr.includes('\r\n\r\n')) {
+          [reqStr, body] = reqStr.split('\r\n\r\n')
           bodyFlag = true
-          reqStr = reqStr.split('\r\n\r\n')
-          reqStr = reqStr[0]
-          body = Buffer.from(reqStr[1])
+          reqObj = reqParser(reqStr)
         }
       }
-      if (bodyFlag) {
-        const reqObj = reqParser(reqStr)
-        console.log(reqObj['Content-Length'])
-        if (reqObj.headers['Content-Length'] > 0) {
-          body = Buffer.concat([body, data])
-          console.log(body.byteLength + '    ' + reqObj.headers['Content-Length'])
-          if (body.byteLength === 155815) {
-            reqObj.body = JSON.stringify(body.toString())
-            let res = await serveStatic(reqObj)
-            if (res === null) res = await routeParser(reqObj, routes, middlewares)
-            socket.end(Buffer.from(res))
-          }
-        }
+      if (!reqObj['Content-Length']) {
+        const res = await routeParser(reqObj, routes, middlewares)
+        return socket.end(Buffer.from(res))
+      }
+      body += data.toString()
+      if (Buffer.from(body).byteLength === reqObj['Content-Length'] * 1) {
+        reqObj.body = body
+        const res = await routeParser(reqObj, routes, middlewares)
+        return socket.end(Buffer.from(res))
       }
     })
 
@@ -44,9 +42,6 @@ function createServer (port) {
     })
 
     socket.on('error', err => {
-      console.log(
-        '---------------------server crashed--------------------------'
-      )
       console.log('error ' + remoteAddr + ': ' + err.message)
     })
   })

@@ -13,10 +13,9 @@ const reqParser = function (req) {
     }
   }
   Object.assign(reqObj, { method, uri, httpVersion })
-  reqObj.headers = {}
   for (let i = 1; i < reqString.length; i++) {
     const header = reqString[i].split(': ')
-    reqObj.headers[header[0]] = header[1].trim()
+    reqObj[header[0]] = header[1].trim()
   }
   return reqObj
 }

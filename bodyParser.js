@@ -1,11 +1,9 @@
 function bodyParser (req, res) {
-  if (req.headers['Content-Type'] === 'application/json') {
-    if (!req.body) return 0
-    console.log(req.body)
+  if (!req.body) return null
+  if (req['Content-Type'] === 'application/json') {
     req.body = JSON.parse(req.body)
   }
-  if (req.headers['Content-Type'] === 'application/x-www-form-urlencoded') {
-    if (!req.body) return 0
+  if (req['Content-Type'] === 'application/x-www-form-urlencoded') {
     const dataStrings = req.body.split('&')
     const body = {}
     dataStrings.forEach(keyValues => {
@@ -15,4 +13,4 @@ function bodyParser (req, res) {
   }
 }
 
-module.exports = { bodyParser }
+module.exports = bodyParser

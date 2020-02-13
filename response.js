@@ -13,7 +13,7 @@ function setStatus (code) {
   let responseString = `HTTP/1.1 ${code}\r\n`
   responseString +=
     'Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\r\n'
-  responseString += `date: ${new Date()}/r/n`
+  responseString += `date: ${new Date()}\r\n`
   this.result = responseString
   return this
 }
@@ -21,6 +21,9 @@ function setStatus (code) {
 function setResponse (res) {
   const body = Buffer.from(JSON.stringify(res))
   let responseString = this.result
+  if (this.cookies) {
+    responseString += this.cookies
+  }
   responseString += 'Content-Type: *\r\n'
   responseString += `Content-Length: ${body.length}\r\n\r\n`
   responseString = Buffer.from(responseString)
@@ -29,4 +32,17 @@ function setResponse (res) {
   return this
 }
 
-module.exports = { errorRes, setStatus, setResponse }
+function cookie (key, value, props) {
+  const cookieStr = `Set-Cookie: ${key}=${value}${buildProps(props)}\r\n`
+  this.cookies ? this.cookies += cookieStr : this.cookies = '' + cookieStr
+}
+
+function buildProps (props) {
+  if (!props) return ''
+  let propStr = ''
+  for (const [prop, propVal] of Object.entries(props)) {
+    propStr += '; ' + prop + '=' + propVal
+  }
+  return propStr
+}
+module.exports = { errorRes, setStatus, setResponse, cookie }

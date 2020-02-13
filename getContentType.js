@@ -10,9 +10,9 @@ function getContentType (uri) {
     css: 'text/css',
     png: 'image/png',
     ico: 'image/vnd',
-    html: 'text/html'
+    html: 'text/html',
+    txt: 'text/plain'
   }
-  console.log(uri)
   const content = contentType[path.extname(uri).slice(1)]
   if (content === undefined) throw new Error('invalid content type')
   return `Content-Type: ${content}`

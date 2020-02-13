@@ -10,7 +10,6 @@ function errorRes () {
 }
 
 function setStatus (code) {
-  console.log(this)
   let responseString = `HTTP/1.1 ${code}\r\n`
   responseString +=
     'Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\r\n'

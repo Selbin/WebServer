@@ -20,7 +20,9 @@ function createServer (port) {
         reqStr += data.toString()
         data = ''
         if (reqStr.includes('\r\n\r\n')) {
-          [reqStr, body] = reqStr.split('\r\n\r\n')
+          reqStr = reqStr.split('\r\n\r\n')
+          body = reqStr.slice(1)
+          reqStr = reqStr[0]
           bodyFlag = true
           reqObj = reqParser(reqStr)
         }

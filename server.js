@@ -17,12 +17,12 @@ function createServer (port) {
     let reqObj
     socket.on('data', async data => {
       if (!bodyFlag) {
-        reqStr += data.toString()
-        data = ''
-        if (reqStr.includes('\r\n\r\n')) {
-          reqStr = reqStr.split('\r\n\r\n')
-          body = reqStr.slice(1)
-          reqStr = reqStr[0]
+        reqStr = data
+        const headerLen = reqStr.indexOf('\r\n\r\n')
+        data = Buffer.from('')
+        if (headerLen !== -1) {
+          body = reqStr.slice(headerLen + 4)
+          reqStr = reqStr.slice(0, headerLen)
           bodyFlag = true
           reqObj = reqParser(reqStr)
         }
@@ -31,9 +31,11 @@ function createServer (port) {
         const res = await routeParser(reqObj, routes, middlewares)
         return socket.end(Buffer.from(res))
       }
-      body += data.toString()
-      if (Buffer.from(body).byteLength === reqObj['Content-Length'] * 1) {
+      body = Buffer.concat([body, data])
+
+      if (body.byteLength === reqObj['Content-Length'] * 1) {
         reqObj.body = body
+        console.log(reqObj.body.byteLength, reqObj['Content-Length'] * 1)
         const res = await routeParser(reqObj, routes, middlewares)
         return socket.end(Buffer.from(res))
       }

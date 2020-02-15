@@ -3,7 +3,7 @@ const fs = require('fs')
 function bodyParser (req, res) {
   if (!req.body) return null
   if (req['Content-Type'] === 'application/json') {
-    req.body = JSON.parse(req.body)
+    req.body = JSON.parse(req.body.toString())
   }
 
   if (req['Content-Type'] === 'application/x-www-form-urlencoded') {
@@ -16,7 +16,7 @@ function bodyParser (req, res) {
 }
 
 function urlParse (req) {
-  const dataStrings = req.body.split('&')
+  const dataStrings = req.body.toString().split('&')
   const body = {}
   dataStrings.forEach(keyValues => {
     body[keyValues.split('=')[0].trim()] = keyValues.split('=')[1].trim()
@@ -26,13 +26,18 @@ function urlParse (req) {
 
 function multipart (req) {
   const boundary = '--' + req['Content-Type'].split(';')[1].slice(10)
-  const fieldContents = req.body.split(boundary).slice(1, -1)
-  req.body = {}
-  for (const field of fieldContents) {
-    const [metaDatas, data] = field.trim().split('\r\n\r\n')
+  const boundaryLen = Buffer.from(boundary).byteLength
+  let body = req.body.slice(boundaryLen)
+  while (body.indexOf(boundary) !== -1) {
+    const fieldEnd = body.indexOf(boundary)
+    const fieldContents = body.slice(0, fieldEnd)
+    body = body.slice(fieldEnd + boundaryLen)
+    const metaLen = fieldContents.indexOf('\r\n\r\n')
+    const metaDatas = fieldContents.slice(0, metaLen).toString()
     const metaObj = parseMetaData(metaDatas)
+    const data = fieldContents.slice(metaLen + 4)
     if (metaObj.filename) {
-      fs.writeFile('./upload/' + JSON.parse(metaObj.filename), data, (err) => {
+      fs.writeFile('./upload/' + JSON.parse(metaObj.filename), Buffer.from(data), (err) => {
         if (err) throw err
       })
     } else req.body[metaObj.name] = data
@@ -41,10 +46,11 @@ function multipart (req) {
 
 function parseMetaData (metaDatas) {
   const keyValues = {}
-  metaDatas = metaDatas.split(/\r\n|;/)
+  metaDatas = metaDatas.trim().split(/\r\n|;/)
   for (const metaData of metaDatas) {
     keyValues[metaData.split(/=|:/)[0].trim()] = metaData.split(/=|:/)[1].trim()
   }
+  console.log(keyValues)
   return keyValues
 }
 

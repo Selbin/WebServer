@@ -6,9 +6,6 @@ function cookieParser (req, res) {
     cookie = cookie.trim()
     req.Cookie[cookie.split('=')[0]] = cookie.split('=')[1]
   }
-  for (const [key, value] of Object.entries(req.Cookie)) {
-    res.cookie(key, value)
-  }
 }
 
 module.exports = cookieParser

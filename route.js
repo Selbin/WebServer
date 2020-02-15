@@ -23,7 +23,7 @@ function matchRoute (route, routeUrl, reqObj) {
 
 const routeParser = async function (reqObj, routes, middlewares) {
   const response = { status: setStatus, send: setResponse, cookie }
-  for (const handler of [...middlewares]) {
+  for (const handler of middlewares) {
     if (await handler(reqObj, response)) return response.result
   }
   const routeUrl = splitAtSlash(reqObj.uri)

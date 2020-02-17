@@ -50,7 +50,6 @@ function parseMetaData (metaDatas) {
   for (const metaData of metaDatas) {
     keyValues[metaData.split(/=|:/)[0].trim()] = metaData.split(/=|:/)[1].trim()
   }
-  console.log(keyValues)
   return keyValues
 }
 

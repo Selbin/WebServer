@@ -26,6 +26,7 @@ function createServer (port) {
           bodyFlag = true
           reqObj = reqParser(reqStr)
         }
+        if (reqObj.Connection === 'keep-alive') socket.setKeepAlive(true, 10)
       }
       if (!reqObj['Content-Length']) {
         const res = await routeParser(reqObj, routes, middlewares)

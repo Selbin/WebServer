@@ -11,13 +11,13 @@ function createServer (port) {
   server.on('connection', socket => {
     const remoteAddr = socket.remoteAddress + ':' + socket.remotePort
     console.log('new client joined', remoteAddr)
-    let reqStr = ''
+    let reqStr = Buffer.from('')
     let bodyFlag = false
     let body = ''
     let reqObj
     socket.on('data', async data => {
       if (!bodyFlag) {
-        reqStr = data
+        reqStr = Buffer.concat([reqStr, data])
         const headerLen = reqStr.indexOf('\r\n\r\n')
         data = Buffer.from('')
         if (headerLen !== -1) {
@@ -26,19 +26,16 @@ function createServer (port) {
           bodyFlag = true
           reqObj = reqParser(reqStr)
         }
-        if (reqObj.Connection === 'keep-alive') socket.setKeepAlive(true, 10)
-      }
-      if (!reqObj['Content-Length']) {
-        const res = await routeParser(reqObj, routes, middlewares)
-        return socket.end(Buffer.from(res))
       }
       body = Buffer.concat([body, data])
-
-      if (body.byteLength === reqObj['Content-Length'] * 1) {
+      if (!reqObj['Content-Length'] || body.byteLength === reqObj['Content-Length'] * 1) {
         reqObj.body = body
-        console.log(reqObj.body.byteLength, reqObj['Content-Length'] * 1)
         const res = await routeParser(reqObj, routes, middlewares)
-        return socket.end(Buffer.from(res))
+        body = Buffer.from('')
+        reqStr = Buffer.from('')
+        bodyFlag = false
+        console.log('response served' + remoteAddr)
+        return socket.write(res)
       }
     })
 

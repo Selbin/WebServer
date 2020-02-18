@@ -1,7 +1,7 @@
 const fs = require('fs')
 
 function bodyParser (req, res) {
-  if (!req.body) return null
+  if (!req['Content-Length']) return null
   if (req['Content-Type'] === 'application/json') {
     req.body = JSON.parse(req.body.toString())
   }
@@ -9,7 +9,6 @@ function bodyParser (req, res) {
   if (req['Content-Type'] === 'application/x-www-form-urlencoded') {
     urlParse(req)
   }
-
   if (req['Content-Type'].startsWith('multipart/form-data')) {
     multipart(req)
   }

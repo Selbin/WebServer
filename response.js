@@ -12,7 +12,7 @@ function errorRes () {
 function setStatus (code) {
   let responseString = `HTTP/1.1 ${code}\r\n`
   responseString +=
-    'Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\r\n'
+    'Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept\r\nKeep-Alive: timeout=10000, max=10\r\n'
   responseString += `date: ${new Date()}\r\n`
   this.result = responseString
   return this
